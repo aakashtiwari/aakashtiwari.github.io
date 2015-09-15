@@ -4,7 +4,7 @@ function GameManager(size, InputManager, Actuator, StorageManager) {
   this.storageManager = new StorageManager;
   this.actuator       = new Actuator;
 
-  this.startTiles     = 2;
+  this.startTiles     = 1;
 
   this.inputManager.on("move", this.move.bind(this));
   this.inputManager.on("restart", this.restart.bind(this));
@@ -68,8 +68,8 @@ GameManager.prototype.addStartTiles = function () {
 // Adds a tile in a random position
 GameManager.prototype.addRandomTile = function () {
   if (this.grid.cellsAvailable()) {
-    var value = Math.random() < 0.9 ? 2 : 4;
-    var tile = new Tile(this.grid.randomAvailableCell(), value);
+    var value = Math.ceil(Math.random()*3)
+    var tile = new Tile(this.grid.randomAvailableCell(), value,0);
 
     this.grid.insertTile(tile);
   }
@@ -153,8 +153,8 @@ GameManager.prototype.move = function (direction) {
         var next      = self.grid.cellContent(positions.next);
 
         // Only one merger per row traversal?
-        if (next && next.value === tile.value && !next.mergedFrom) {
-          var merged = new Tile(positions.next, tile.value * 2);
+        if (next && self.canMerge(tile,next) && !next.mergedFrom) {
+          var merged = new Tile(positions.next, tile.value + next.value,Math.max(tile.index,next.index)+1);
           merged.mergedFrom = [tile, next];
 
           self.grid.insertTile(merged);
@@ -167,7 +167,7 @@ GameManager.prototype.move = function (direction) {
           self.score += merged.value;
 
           // The mighty 2048 tile
-          if (merged.value === 2048) self.won = true;
+          if (merged.value === 2584) self.won = true; 
         } else {
           self.moveTile(tile, positions.farthest);
         }
@@ -255,8 +255,9 @@ GameManager.prototype.tileMatchesAvailable = function () {
           var cell   = { x: x + vector.x, y: y + vector.y };
 
           var other  = self.grid.cellContent(cell);
-
-          if (other && other.value === tile.value) {
+          
+          if (other && this.canMerge(tile, other)) {
+          //if (other && other.value === tile.value) {
             return true; // These two tiles can be merged
           }
         }
@@ -266,7 +267,25 @@ GameManager.prototype.tileMatchesAvailable = function () {
 
   return false;
 };
+GameManager.prototype.canMerge = function(first, second) {
+  var sum = first.value + second.value;
+  var fib = [1,1]
 
+  while (sum > fib[fib.length-1]) {
+    fib.push(fib[fib.length-1] + fib[fib.length-2])
+  }
+  
+  for (var i = 0; i<fib.length && sum>=fib[i]; i++) {
+    if (sum === fib[i]) {
+      return true;
+    }
+  }
+  return false;
+
+ 
+  // return (first.value ==1 && second.value ==1) || Math.abs(first.index - second.index) == 1
+};
 GameManager.prototype.positionsEqual = function (first, second) {
   return first.x === second.x && first.y === second.y;
 };
+

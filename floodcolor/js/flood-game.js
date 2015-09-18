@@ -37,7 +37,7 @@ function clear (element)
 /* Flood fill game. */
 
 var moves;
-var max_moves = 25;
+var max_moves = 22;
 var finished;
 
 /* Alter one element of the game table to be flooded. */
@@ -113,7 +113,8 @@ function flood (colour, initial)
             alert ("Finished, at last!");
         }
     } else if (moves == max_moves) {
-        alert ("You lost.");
+        alert ("You lost.")
+        new_game();
     }
 }
 
